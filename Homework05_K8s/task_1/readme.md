@@ -73,7 +73,7 @@ docker@minikube:~$ docker container ls
 >                  k8s_POD_metrics-server-5794ccf74d-65zhd_kube-system_f877edca-2a62-4909-b5fa-a11dfc33fe01_0
 > 8e54a0a451f1   6e38f40d628d           "/storage-provisioner"   4 hours ago     Up 4 hours
 ```
-<img src="img/dashboard.PNG" alt="Dashboard" width="800"/>
+<img src="img/webpod.PNG" alt="Dashboard" width="800"/>
 
 ## [Specification](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/)
 ```
@@ -142,6 +142,10 @@ tsar@DESKTOP-80THIFC:task_1$ k get po -l app=nginx-k8s
 > nginx-k8s-7d878545fb-6jhjj   1/1     Running   0          3m22s
 > nginx-k8s-7d878545fb-6nbwp   1/1     Running   0          17s
 ```
+<img src="img/dashboard_workloads.PNG" alt="Dashboard workloads" width="800"/>
+<img src="img/dashboard_deploy.PNG" alt="Dashboard Deploy" width="800"/>
+<img src="img/dashboard_rs.PNG" alt="Dashboard ReplicaSets" width="800"/>
+<img src="img/dashboard_po.PNG" alt="Dashboard Pods" width="800"/>
 
 # Snippets
 ```
