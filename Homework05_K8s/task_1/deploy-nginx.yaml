@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-k8s
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: nginx-k8s
+  template:
+    metadata:
+      labels:
+        app: nginx-k8s # the label for the pods and the deployments
+    spec:
+      containers:
+      - name: nginx-k8s
+        image: nginx:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 80 # the application listens to this port
+        resources:
+          requests: # minimum resources required
+            cpu: 250m
+            memory: 64Mi
+          limits: # maximum resources allocated
+            cpu: 500m
+            memory: 512Mi
