@@ -84,9 +84,6 @@ tsar@DESKTOP-80THIFC:task_1$ k get po
 > webreplica-znh6p   1/1     Running   0          42s
 ```
 
-```bash
-kubectl run web --image=nginx:latest --dry-run=client -o yaml
-```
 # Homework
 Contents of the `deploy-nginx.yaml` 
 ```
@@ -121,11 +118,12 @@ spec:
 Deploying
 ```
 tsar@DESKTOP-80THIFC:task_1$ k apply -f ./deploy-nginx.yaml
-deployment.apps/nginx-k8s created
+> deployment.apps/nginx-k8s created
+
 tsar@DESKTOP-80THIFC:task_1$ k get po -l app=nginx-k8s
-NAME                         READY   STATUS    RESTARTS   AGE
-nginx-k8s-7d878545fb-4b525   1/1     Running   0          21s
-nginx-k8s-7d878545fb-6jhjj   1/1     Running   0          21s
+> NAME                         READY   STATUS    RESTARTS   AGE
+> nginx-k8s-7d878545fb-4b525   1/1     Running   0          21s
+> nginx-k8s-7d878545fb-6jhjj   1/1     Running   0          21s
 ```
 Removing one of the pods
 ```
@@ -173,6 +171,9 @@ k top pod -n kube-system metrics-server-5794ccf74d-65zhd
 > metrics-server-5794ccf74d-65zhd   7m           22Mi
 k proxy
 kubectl explain pods.spec
+kubectl run web --image=nginx:latest --dry-run=client -o yaml # Creating a simple manifest from cmd
+```
+
 ```
 > Use `http` in front of the service name  
 > http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/http:kubernetes-dashboard:/proxy/  
