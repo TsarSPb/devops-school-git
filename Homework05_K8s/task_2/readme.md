@@ -297,141 +297,7 @@ curl localhost
 * Implement Canary deployment of an application via Ingress. Traffic to canary deployment should be redirected if you add "canary:always" in the header, otherwise it should go to regular deployment.
 Set to redirect a percentage of traffic to canary deployment.
 
-
-## Canary Ingress
-* Implement Canary deployment of an application via Ingress. Traffic to canary deployment should be redirected if you add "canary:always" in the header, otherwise it should go to regular deployment.
-Set to redirect a percentage of traffic to canary deployment.
-
-> All the manifests and the Dockerfile for this task are located in the `./canary` folder
-
-### Building Docker images for app v1.0 and 2.0
-```
-PROJECT_ID=k8s-canary
-app_version=1.0
-docker build --build-arg version=$app_version -t tsarspb/$PROJECT_ID:$app_version .
-docker tag tsarspb/$PROJECT_ID:$app_version tsarspb/$PROJECT_ID:latest
-docker images "tsarspb/*"
-> REPOSITORY           TAG       IMAGE ID       CREATED         SIZE
-> tsarspb/k8s-canary   1.0       43584252353d   9 minutes ago   11.4MB
-> tsarspb/k8s-canary   latest    43584252353d   9 minutes ago   11.4MB
-docker login -u tsarspb
-docker push tsarspb/$PROJECT_ID:latest
-docker push tsarspb/$PROJECT_ID:$app_version
-
-app_version=2.0
-docker build --build-arg version=$app_version -t tsarspb/$PROJECT_ID:$app_version .
-
-$ docker tag tsarspb/$PROJECT_ID:$app_version tsarspb/$PROJECT_ID:latest
-$ docker images "tsarspb/*"
-> REPOSITORY           TAG       IMAGE ID       CREATED          SIZE
-> tsarspb/k8s-canary   2.0       c7df76fd622b   47 seconds ago   11.4MB
-> tsarspb/k8s-canary   latest    c7df76fd622b   47 seconds ago   11.4MB
-> tsarspb/k8s-canary   1.0       43584252353d   42 minutes ago   11.4MB
-
-docker push tsarspb/$PROJECT_ID:latest
-docker push tsarspb/$PROJECT_ID:$app_version
-```
-
-### Deploying "Production" v1.0 and "Canary" v2.0 versions of the app
-```
-kubectl create ns prod
-kubectl apply -f ./deploy.yaml -n prod
-kubectl apply -f ./deploy-canary.yaml -n prod
-
-$ kubectl get po -n prod
-> NAME                                  READY   STATUS    RESTARTS   AGE
-> kubeapp-canary-56476554c4-wwgjw       1/1     Running   0          27s
-> kubeapp-production-6556ddf7b8-kk55v   1/1     Running   0          4m20s
-> kubeapp-production-6556ddf7b8-kls57   1/1     Running   0          4m20s
-> kubeapp-production-6556ddf7b8-m2cqm   1/1     Running   0          4m20s
-```
-
-### Deploying Production and Canary services
-```
-$ kubectl apply -f ./service-np.yaml -n prod
-> service/kubeapp-production-service created
-$ kubectl apply -f ./service-np-canary.yaml -n prod
-> service/kubeapp-canary-service created
-
-$ kubectl get svc -n prod
-> NAME                         TYPE       CLUSTER-IP       EXTERNAL-IP   PORT(S)        AGE
-> kubeapp-canary-service       NodePort   10.102.24.194    <none>        81:31022/TCP   6s
-> kubeapp-production-service   NodePort   10.104.220.185   <none>        81:32624/TCP   14s
-``` 
-
-### Deploying ingress
-```
-$ kubectl apply -f ./ingress.yaml -n prod
-> ingress.networking.k8s.io/app-ingress created
-
-$ kubectl apply -f ./ingress-canary.yaml -n prod
-> ingress.networking.k8s.io/app-ingress-canary created
-
-$ kubectl get svc,ing -n prod
-> NAME                                 TYPE       CLUSTER-IP       EXTERNAL-IP   PORT(S)        AGE
-> service/kubeapp-canary-service       NodePort   10.102.24.194    <none>        81:31022/TCP   10m
-> service/kubeapp-production-service   NodePort   10.104.220.185   <none>        81:32624/TCP   10m
-> 
-> NAME                                           CLASS    HOSTS   ADDRESS     PORTS   AGE
-> ingress.networking.k8s.io/app-ingress          <none>   *       localhost   80      2m3s
-> ingress.networking.k8s.io/app-ingress-canary   <none>   *       localhost   80      115s
-```
-
-### Testing the configuration
-Here is the excerpt from the app-ingress-canary
-```
-metadata:
-  name: app-ingress-canary
-  annotations:
-    kubernetes.io/ingress.class: nginx
-    nginx.ingress.kubernetes.io/canary: "true"
-    nginx.ingress.kubernetes.io/canary-weight: "10"
-    nginx.ingress.kubernetes.io/canary-by-header: "canary"
-```
-We shoud be routed to the canary v1.0 in ~10% requests when the "canary" header is not specified (in this case ingress falls back to routing based on weight) or 
-
-No header specified - ingress falls back to routing based on weight and shoud route to the canary v2.0 in ~10% requests
-```
-minikube tunnel
-$ while true; do curl localhost; echo ; sleep 1; done;
-> Congratulations! Version 1.0 of your application is running on Kubernetes.
-> Congratulations! Version 1.0 of your application is running on Kubernetes.
-> Congratulations! Version 1.0 of your application is running on Kubernetes.
-> Congratulations! Version 2.0 of your application is running on Kubernetes.
-> Congratulations! Version 1.0 of your application is running on Kubernetes.
-> Congratulations! Version 1.0 of your application is running on Kubernetes.
-> Congratulations! Version 1.0 of your application is running on Kubernetes.
-> Congratulations! Version 1.0 of your application is running on Kubernetes.
-> Congratulations! Version 2.0 of your application is running on Kubernetes.
-```
-"canary:always" header is specified - ingress routes all the requests to the canary v2.0
-```
-$ while true; do curl -H "canary:always" localhost; echo ; sleep 1; done;
-Congratulations! Version 2.0 of your application is running on Kubernetes.
-Congratulations! Version 2.0 of your application is running on Kubernetes.
-Congratulations! Version 2.0 of your application is running on Kubernetes.
-Congratulations! Version 2.0 of your application is running on Kubernetes.
-Congratulations! Version 2.0 of your application is running on Kubernetes.
-```
-"canary" header is set to a value other than "always" - ingress falls back to routing based on weight and shoud route to the canary v2.0 in ~10% requests
-```
-$ while true; do curl -H "canary:somev" localhost; echo ; sleep 1; done;
-> Congratulations! Version 1.0 of your application is running on Kubernetes.
-> Congratulations! Version 1.0 of your application is running on Kubernetes.
-> Congratulations! Version 1.0 of your application is running on Kubernetes.
-> Congratulations! Version 1.0 of your application is running on Kubernetes.
-> Congratulations! Version 1.0 of your application is running on Kubernetes.
-> Congratulations! Version 1.0 of your application is running on Kubernetes.
-> Congratulations! Version 1.0 of your application is running on Kubernetes.
-> Congratulations! Version 2.0 of your application is running on Kubernetes.
-> Congratulations! Version 1.0 of your application is running on Kubernetes.
-> Congratulations! Version 1.0 of your application is running on Kubernetes.
-> Congratulations! Version 1.0 of your application is running on Kubernetes.
-> Congratulations! Version 2.0 of your application is running on Kubernetes.
-> Congratulations! Version 1.0 of your application is running on Kubernetes.
-```
-
-## kube-system namespace
+## Part 1 kube-system namespace
 * In Minikube in namespace kube-system, there are many different pods running. Your task is to figure out who creates them, and who makes sure they are running (restores them after deletion).
 
 ### General thoughts
@@ -567,4 +433,145 @@ $ kubectl get deploy,rs,ds,po,svc,ep,sa,secret,cm -n kube-system
 > configmap/kube-root-ca.crt                     1      14h
 > configmap/kubeadm-config                       1      14h
 > configmap/kubelet-config-1.22                  1      14h
+```
+
+## Part 2 Canary Ingress
+* Implement Canary deployment of an application via Ingress. Traffic to canary deployment should be redirected if you add "canary:always" in the header, otherwise it should go to regular deployment.
+Set to redirect a percentage of traffic to canary deployment.
+
+> All the manifests and the Dockerfile for this task are located in the `./canary` folder
+
+### Building Docker images for app v1.0 and 2.0
+```
+PROJECT_ID=k8s-canary
+app_version=1.0
+docker build --build-arg version=$app_version -t tsarspb/$PROJECT_ID:$app_version .
+docker tag tsarspb/$PROJECT_ID:$app_version tsarspb/$PROJECT_ID:latest
+docker images "tsarspb/*"
+> REPOSITORY           TAG       IMAGE ID       CREATED         SIZE
+> tsarspb/k8s-canary   1.0       43584252353d   9 minutes ago   11.4MB
+> tsarspb/k8s-canary   latest    43584252353d   9 minutes ago   11.4MB
+docker login -u tsarspb
+docker push tsarspb/$PROJECT_ID:latest
+docker push tsarspb/$PROJECT_ID:$app_version
+
+app_version=2.0
+docker build --build-arg version=$app_version -t tsarspb/$PROJECT_ID:$app_version .
+
+$ docker tag tsarspb/$PROJECT_ID:$app_version tsarspb/$PROJECT_ID:latest
+$ docker images "tsarspb/*"
+> REPOSITORY           TAG       IMAGE ID       CREATED          SIZE
+> tsarspb/k8s-canary   2.0       c7df76fd622b   47 seconds ago   11.4MB
+> tsarspb/k8s-canary   latest    c7df76fd622b   47 seconds ago   11.4MB
+> tsarspb/k8s-canary   1.0       43584252353d   42 minutes ago   11.4MB
+
+docker push tsarspb/$PROJECT_ID:latest
+docker push tsarspb/$PROJECT_ID:$app_version
+```
+
+### Deploying "Production" v1.0 and "Canary" v2.0 versions of the app
+```
+kubectl create ns prod
+kubectl apply -f ./deploy.yaml -n prod
+kubectl apply -f ./deploy-canary.yaml -n prod
+
+$ kubectl get po -n prod
+> NAME                                  READY   STATUS    RESTARTS   AGE
+> kubeapp-canary-56476554c4-wwgjw       1/1     Running   0          27s
+> kubeapp-production-6556ddf7b8-kk55v   1/1     Running   0          4m20s
+> kubeapp-production-6556ddf7b8-kls57   1/1     Running   0          4m20s
+> kubeapp-production-6556ddf7b8-m2cqm   1/1     Running   0          4m20s
+```
+
+### Deploying Production and Canary services
+```
+$ kubectl apply -f ./service-np.yaml -n prod
+> service/kubeapp-production-service created
+$ kubectl apply -f ./service-np-canary.yaml -n prod
+> service/kubeapp-canary-service created
+
+$ kubectl get svc -n prod
+> NAME                         TYPE       CLUSTER-IP       EXTERNAL-IP   PORT(S)        AGE
+> kubeapp-canary-service       NodePort   10.102.24.194    <none>        81:31022/TCP   6s
+> kubeapp-production-service   NodePort   10.104.220.185   <none>        81:32624/TCP   14s
+``` 
+
+### Deploying ingress
+```
+$ kubectl apply -f ./ingress.yaml -n prod
+> ingress.networking.k8s.io/app-ingress created
+
+$ kubectl apply -f ./ingress-canary.yaml -n prod
+> ingress.networking.k8s.io/app-ingress-canary created
+
+$ kubectl get svc,ing -n prod
+> NAME                                 TYPE       CLUSTER-IP       EXTERNAL-IP   PORT(S)        AGE
+> service/kubeapp-canary-service       NodePort   10.102.24.194    <none>        81:31022/TCP   10m
+> service/kubeapp-production-service   NodePort   10.104.220.185   <none>        81:32624/TCP   10m
+> 
+> NAME                                           CLASS    HOSTS   ADDRESS     PORTS   AGE
+> ingress.networking.k8s.io/app-ingress          <none>   *       localhost   80      2m3s
+> ingress.networking.k8s.io/app-ingress-canary   <none>   *       localhost   80      115s
+```
+
+### Testing the configuration
+> I've deviated a bit from the strict definition of the task and added `canary-weight` annotation just for the sake of experiment / as as part of exploration, so my ingress never always returns some % of "canary" version.
+
+Here is the excerpt from the app-ingress-canary
+```
+metadata:
+  name: app-ingress-canary
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/canary: "true"
+    nginx.ingress.kubernetes.io/canary-weight: "10"
+    nginx.ingress.kubernetes.io/canary-by-header: "canary"
+```
+We shoud be routed to the canary v2.0 in ~10% requests when the "canary" header is not specified or its value isn't "always" (in this case ingress falls back to routing based on weight) or in 100% requests when the value of the "canary" header is set to "always".  
+
+
+#### Testing with no header specified
+Ingress falls back to routing based on weight and should route to the canary v2.0 in ~10% requests
+```
+minikube tunnel
+$ while true; do curl localhost; echo ; sleep 1; done;
+> Congratulations! Version 1.0 of your application is running on Kubernetes.
+> Congratulations! Version 1.0 of your application is running on Kubernetes.
+> Congratulations! Version 1.0 of your application is running on Kubernetes.
+> Congratulations! Version 2.0 of your application is running on Kubernetes.
+> Congratulations! Version 1.0 of your application is running on Kubernetes.
+> Congratulations! Version 1.0 of your application is running on Kubernetes.
+> Congratulations! Version 1.0 of your application is running on Kubernetes.
+> Congratulations! Version 1.0 of your application is running on Kubernetes.
+> Congratulations! Version 2.0 of your application is running on Kubernetes.
+```
+
+#### Testing with "canary:always" header
+Ingress routes all the requests to the canary v2.0
+```
+$ while true; do curl -H "canary:always" localhost; echo ; sleep 1; done;
+Congratulations! Version 2.0 of your application is running on Kubernetes.
+Congratulations! Version 2.0 of your application is running on Kubernetes.
+Congratulations! Version 2.0 of your application is running on Kubernetes.
+Congratulations! Version 2.0 of your application is running on Kubernetes.
+Congratulations! Version 2.0 of your application is running on Kubernetes.
+```
+
+#### Testing with "canary" header set to a value other than "always"
+Ingress falls back to routing based on weight and shoud route to the canary v2.0 in ~10% requests
+```
+$ while true; do curl -H "canary:somev" localhost; echo ; sleep 1; done;
+> Congratulations! Version 1.0 of your application is running on Kubernetes.
+> Congratulations! Version 1.0 of your application is running on Kubernetes.
+> Congratulations! Version 1.0 of your application is running on Kubernetes.
+> Congratulations! Version 1.0 of your application is running on Kubernetes.
+> Congratulations! Version 1.0 of your application is running on Kubernetes.
+> Congratulations! Version 1.0 of your application is running on Kubernetes.
+> Congratulations! Version 1.0 of your application is running on Kubernetes.
+> Congratulations! Version 2.0 of your application is running on Kubernetes.
+> Congratulations! Version 1.0 of your application is running on Kubernetes.
+> Congratulations! Version 1.0 of your application is running on Kubernetes.
+> Congratulations! Version 1.0 of your application is running on Kubernetes.
+> Congratulations! Version 2.0 of your application is running on Kubernetes.
+> Congratulations! Version 1.0 of your application is running on Kubernetes.
 ```
