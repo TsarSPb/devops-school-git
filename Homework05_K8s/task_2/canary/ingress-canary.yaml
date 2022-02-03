@@ -1,0 +1,21 @@
+kind: Ingress
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: app-ingress-canary
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/canary: "true"
+    nginx.ingress.kubernetes.io/canary-weight: "10"
+    nginx.ingress.kubernetes.io/canary-by-header: "canary"
+spec:
+  rules:
+#    - host: happy.k8s.io
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: kubeapp-canary-service
+                port:
+                  number: 81

@@ -1,0 +1,36 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: kubeapp-canary
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kubeapp
+      env: canary
+  template:
+    metadata:
+      name: kubeapp
+      labels:
+        app: kubeapp
+        env: canary
+    spec:
+      containers:
+      - name: kubeapp
+        image: tsarspb/k8s-canary:2.0
+        imagePullPolicy: Always
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+        command: ["/app"]
+        ports:
+        - name: kubeapp
+          containerPort: 8080
+        resources:
+          requests: # minimum resources required
+            cpu: 250m
+            memory: 64Mi
+          limits: # maximum resources allocated
+            cpu: 500m
+            memory: 512Mi

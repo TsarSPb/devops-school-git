@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    run: nginx
+  name: nginx
+spec:
+  containers:
+  - image: nginx:latest
+    name: nginx
+    env:
+    - name: DATABASE_URL
+      valueFrom:
+        secretKeyRef:
+          name: connection-string
+          key: DATABASE_URL
+    envFrom:
+      - configMapRef:
+          name: user

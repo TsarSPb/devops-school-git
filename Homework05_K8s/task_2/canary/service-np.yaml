@@ -1,0 +1,15 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: kubeapp-production-service
+  labels:
+    app: kubeapp
+    env: production
+spec:
+  type: NodePort
+  ports:
+  - port: 81
+    targetPort: 8080
+  selector:
+    app: kubeapp
+    env: production

@@ -179,6 +179,10 @@ kubectl run web --image=nginx:latest --dry-run=client -o yaml # Creating a simpl
 ```
 
 ```
+tsar@DESKTOP-80THIFC:task_2$ kubectl proxy
+Starting to serve on 127.0.0.1:8001
+```
+
 > Use `http` in front of the service name  
 > http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/http:kubernetes-dashboard:/proxy/  
 > Using `https` like this  
