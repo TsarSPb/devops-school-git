@@ -23,7 +23,7 @@ k get pvc
 > NAME                     STATUS   VOLUME                CAPACITY   ACCESS MODES   STORAGECLASS   AGE
 > minio-deployment-claim   Bound    minio-deployment-pv   5Gi        RWO                           79s
 
-$ k get pv,pvc
+k get pv,pvc
 > NAME                                   CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM                            STORAGECLASS   REASON   AGE
 > persistentvolume/minio-deployment-pv   5Gi        RWO            Recycle          Bound    default/minio-deployment-claim                           13m
 > 
@@ -32,10 +32,10 @@ $ k get pv,pvc
 ```
 
 ```
-$ k apply -f deployment.yaml
+k apply -f deployment.yaml
 > deployment.apps/minio created
 
-$ k apply -f minio-nodeport.yaml
+k apply -f minio-nodeport.yaml
 > service/minio-app created
 ```
 
@@ -66,10 +66,10 @@ curl localhost:64939
 ## Accessing via Ingress rather than Service
 But we know about `Ingress` now! Let's do it.  
 ```
-$ k apply -f ingress.yaml 
+k apply -f ingress.yaml 
 ingress.networking.k8s.io/app-ingress created
 
-$ k get ing
+k get ing
 > NAME          CLASS    HOSTS   ADDRESS     PORTS   AGE
 > app-ingress   <none>   *       localhost   80      14s
 
@@ -81,7 +81,7 @@ minikube tunnel
 > ❗  Access to ports below 1024 may fail on Windows with OpenSSH clients older than v8.1. For more information, see: https://minikube.> sigs.k8s.io/docs/handbook/accessing/#access-to-ports-1024-on-windows-requires-root-permission
 > 🏃  Starting tunnel for service app-ingress.
 
-$ k get svc,ing
+k get svc,ing
 > NAME                 TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)          AGE
 > service/kubernetes   ClusterIP   10.96.0.1      <none>        443/TCP          98m
 > service/minio-app    NodePort    10.96.188.61   <none>        9001:30008/TCP   2m57s
@@ -98,11 +98,11 @@ curl localhost
 
 ## Deploying `StatefulSet`
 ```
-$ k apply -f statefulset.yaml
+k apply -f statefulset.yaml
 statefulset.apps/minio-state created
 service/minio-state created
 
-$ k get pv,pvc,sts,po
+k get pv,pvc,sts,po
 > NAME                                   CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM                            STORAGECLASS   REASON   AGE
 > persistentvolume/minio-deployment-pv   5Gi        RWO            Retain           Bound    default/> minio-deployment-claim                         2m51s
 > 
@@ -151,7 +151,7 @@ k get storageclass
 > NAME                 PROVISIONER                RECLAIMPOLICY   VOLUMEBINDINGMODE   ALLOWVOLUMEEXPANSION   AGE
 > standard (default)   k8s.io/minikube-hostpath   Delete          Immediate           false                  4m23s
 
-$ k get pv,pvc
+k get pv,pvc
 > NAME                                   CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM                            STORAGECLASS   REASON   AGE
 > persistentvolume/minio-deployment-pv   5Gi        RWO            Recycle          Bound    default/minio-deployment-claim                           5m45s
 > persistentvolume/minio-state           1Gi        RWO            Retain           Bound    default/minio-minio-state-0                              2s
@@ -168,7 +168,7 @@ k apply -f statefulset.yaml
 > statefulset.apps/minio-state created
 > service/minio-state created
 
-$ k get deploy,po,sts,pv,pvc
+k get deploy,po,sts,pv,pvc
 > NAME                    READY   UP-TO-DATE   AVAILABLE   AGE
 > deployment.apps/minio   1/1     1            1           4m44s
 > NAME                         READY   STATUS    RESTARTS   AGE
@@ -203,6 +203,11 @@ $ k get sts,pv,pvc
 * Create deploy with emptyDir save data to mountPoint emptyDir, delete pods, check data.
 * Optional. Raise an nfs share on a remote machine. Create a pv using this share, create a pvc for it, create a deployment. Save data to the share, delete the deployment, delete the pv/pvc, check that the data is safe.
 
+[Assignment 1 Ingress](#ingress)  
+[Assignment 2 Ingress paths](#ingress-paths)  
+[Assignment 3 emptyDir mountPoint](#emptydir-mountpoint)  
+[Assignment 4 NFS (optional)](#nfs-share)  
+
 ## Ingress
 * We published minio "outside" using nodePort. Do the same but using ingress.
 
@@ -215,7 +220,7 @@ k apply -f ingress.yaml
 
 Here is the current state of the cluster
 ```
-$ k get deploy,po,svc,ing,pv,pvc
+k get deploy,po,svc,ing,pv,pvc
 > NAME                    READY   UP-TO-DATE   AVAILABLE   AGE
 > deployment.apps/minio   1/1     1            1           26m
 > 
@@ -262,7 +267,8 @@ Deploying the app from `task2`
 ```
 k create ns prod-web
 > namespace/prod-web created
-$ k apply -n prod-web -f old_app/.
+
+k apply -n prod-web -f old_app/.
 > deployment.apps/web created
 > ingress.networking.k8s.io/ingress-web created
 > configmap/nginx-configmap created

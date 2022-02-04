@@ -1,3 +1,7 @@
+# General info
+The first part in this readme contains some test and exploratory / curiosity commands.  
+The `Homework` itself down below, here is the link right to it: [the Homework ](#homework)
+
 # Task 1.1
 ## Verify kubectl installation
 ```

@@ -44,7 +44,7 @@
     <body class="vscode-body vscode-light">
         <h1 id="general-info">General info</h1>
 <p>The first part in this readme contains some test and exploratory / curiosity commands.<br>
-The <code>Homework</code> itself is the last section, here is the link right to it: <a href="#homework">the Homework </a></p>
+The <code>Homework</code> itself down below, after the <code>Class drills</code> section, here is the link right to it: <a href="#homework">the Homework </a></p>
 <h1 id="class-drills">Class drills</h1>
 <h2 id="deploying-minio">Deploying Minio</h2>
 <pre><code><code><div>k apply -f pv.yaml
@@ -65,17 +65,17 @@ k get pvc
 &gt; NAME                     STATUS   VOLUME                CAPACITY   ACCESS MODES   STORAGECLASS   AGE
 &gt; minio-deployment-claim   Bound    minio-deployment-pv   5Gi        RWO                           79s
 
-$ k get pv,pvc
+k get pv,pvc
 &gt; NAME                                   CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM                            STORAGECLASS   REASON   AGE
 &gt; persistentvolume/minio-deployment-pv   5Gi        RWO            Recycle          Bound    default/minio-deployment-claim                           13m
 &gt; 
 &gt; NAME                                           STATUS   VOLUME                CAPACITY   ACCESS MODES   STORAGECLASS   AGE
 &gt; persistentvolumeclaim/minio-deployment-claim   Bound    minio-deployment-pv   5Gi        RWO                           17s
 </div></code></code></pre>
-<pre><code><code><div>$ k apply -f deployment.yaml
+<pre><code><code><div>k apply -f deployment.yaml
 &gt; deployment.apps/minio created
 
-$ k apply -f minio-nodeport.yaml
+k apply -f minio-nodeport.yaml
 &gt; service/minio-app created
 </div></code></code></pre>
 <p>Checking that data gets stored in the <code>pv</code></p>
@@ -100,10 +100,10 @@ curl localhost:64939
 </div></code></code></pre>
 <h2 id="accessing-via-ingress-rather-than-service">Accessing via Ingress rather than Service</h2>
 <p>But we know about <code>Ingress</code> now! Let's do it.</p>
-<pre><code><code><div>$ k apply -f ingress.yaml 
+<pre><code><code><div>k apply -f ingress.yaml 
 ingress.networking.k8s.io/app-ingress created
 
-$ k get ing
+k get ing
 &gt; NAME          CLASS    HOSTS   ADDRESS     PORTS   AGE
 &gt; app-ingress   &lt;none&gt;   *       localhost   80      14s
 
@@ -115,7 +115,7 @@ minikube tunnel
 &gt; ❗  Access to ports below 1024 may fail on Windows with OpenSSH clients older than v8.1. For more information, see: https://minikube.&gt; sigs.k8s.io/docs/handbook/accessing/#access-to-ports-1024-on-windows-requires-root-permission
 &gt; 🏃  Starting tunnel for service app-ingress.
 
-$ k get svc,ing
+k get svc,ing
 &gt; NAME                 TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)          AGE
 &gt; service/kubernetes   ClusterIP   10.96.0.1      &lt;none&gt;        443/TCP          98m
 &gt; service/minio-app    NodePort    10.96.188.61   &lt;none&gt;        9001:30008/TCP   2m57s
@@ -130,11 +130,11 @@ curl localhost
 &lt;/svg&gt;&lt;/div&gt;&lt;/div&gt;&lt;/body&gt;&lt;/html&gt;
 </div></code></code></pre>
 <h2 id="deploying-statefulset">Deploying <code>StatefulSet</code></h2>
-<pre><code><code><div>$ k apply -f statefulset.yaml
+<pre><code><code><div>k apply -f statefulset.yaml
 statefulset.apps/minio-state created
 service/minio-state created
 
-$ k get pv,pvc,sts,po
+k get pv,pvc,sts,po
 &gt; NAME                                   CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM                            STORAGECLASS   REASON   AGE
 &gt; persistentvolume/minio-deployment-pv   5Gi        RWO            Retain           Bound    default/&gt; minio-deployment-claim                         2m51s
 &gt; 
@@ -178,7 +178,7 @@ There is one in <code>minikube</code>, but it still doesn't work</p>
 &gt; NAME                 PROVISIONER                RECLAIMPOLICY   VOLUMEBINDINGMODE   ALLOWVOLUMEEXPANSION   AGE
 &gt; standard (default)   k8s.io/minikube-hostpath   Delete          Immediate           false                  4m23s
 
-$ k get pv,pvc
+k get pv,pvc
 &gt; NAME                                   CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM                            STORAGECLASS   REASON   AGE
 &gt; persistentvolume/minio-deployment-pv   5Gi        RWO            Recycle          Bound    default/minio-deployment-claim                           5m45s
 &gt; persistentvolume/minio-state           1Gi        RWO            Retain           Bound    default/minio-minio-state-0                              2s
@@ -193,7 +193,7 @@ $ k get pv,pvc
 &gt; statefulset.apps/minio-state created
 &gt; service/minio-state created
 
-$ k get deploy,po,sts,pv,pvc
+k get deploy,po,sts,pv,pvc
 &gt; NAME                    READY   UP-TO-DATE   AVAILABLE   AGE
 &gt; deployment.apps/minio   1/1     1            1           4m44s
 &gt; NAME                         READY   STATUS    RESTARTS   AGE
@@ -227,6 +227,10 @@ $ k get sts,pv,pvc
 <li>Create deploy with emptyDir save data to mountPoint emptyDir, delete pods, check data.</li>
 <li>Optional. Raise an nfs share on a remote machine. Create a pv using this share, create a pvc for it, create a deployment. Save data to the share, delete the deployment, delete the pv/pvc, check that the data is safe.</li>
 </ul>
+<p><a href="#ingress">Assignment 1 Ingress</a><br>
+<a href="#ingress-paths">Assignment 2 Ingress paths</a><br>
+<a href="#emptydir-mountpoint">Assignment 3 emptyDir mountPoint</a><br>
+<a href="#nfs-share">Assignment 4 NFS (optional)</a></p>
 <h2 id="ingress">Ingress</h2>
 <ul>
 <li>We published minio &quot;outside&quot; using nodePort. Do the same but using ingress.</li>
@@ -237,7 +241,7 @@ Re-applying the manifest, just in case...</p>
 &gt; ingress.networking.k8s.io/app-ingress unchanged
 </div></code></code></pre>
 <p>Here is the current state of the cluster</p>
-<pre><code><code><div>$ k get deploy,po,svc,ing,pv,pvc
+<pre><code><code><div>k get deploy,po,svc,ing,pv,pvc
 &gt; NAME                    READY   UP-TO-DATE   AVAILABLE   AGE
 &gt; deployment.apps/minio   1/1     1            1           26m
 &gt; 
@@ -281,7 +285,8 @@ minikube tunnel
 <p>Deploying the app from <code>task2</code></p>
 <pre><code><code><div>k create ns prod-web
 &gt; namespace/prod-web created
-$ k apply -n prod-web -f old_app/.
+
+k apply -n prod-web -f old_app/.
 &gt; deployment.apps/web created
 &gt; ingress.networking.k8s.io/ingress-web created
 &gt; configmap/nginx-configmap created

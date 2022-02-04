@@ -297,6 +297,9 @@ curl localhost
 * Implement Canary deployment of an application via Ingress. Traffic to canary deployment should be redirected if you add "canary:always" in the header, otherwise it should go to regular deployment.
 Set to redirect a percentage of traffic to canary deployment.
 
+[Assignment 1 kube-system Namespace](#part-1-kube-system-namespace)  
+[Assignment 2 Canary Ingress](#part-2-canary-ingress)  
+
 ## Part 1 kube-system namespace
 * In Minikube in namespace kube-system, there are many different pods running. Your task is to figure out who creates them, and who makes sure they are running (restores them after deletion).
 
