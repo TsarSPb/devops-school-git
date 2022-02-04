@@ -1,3 +1,7 @@
+# General info
+The first part in this readme contains some test and exploratory / curiosity commands.  
+The `Homework` itself down below, after the `Class drills` section, here is the link right to it: [the Homework ](#homework)
+
 # Class drills
 ## Deploying Minio
 ```
@@ -373,7 +377,7 @@ When a Pod is recreated or moved from a node for any reason, the data in the emp
 ## NFS share
 * Optional. Raise an nfs share on a remote machine. Create a pv using this share, create a pvc for it, create a deployment. Save data to the share, delete the deployment, delete the pv/pvc, check that the data is safe.
 
-This one is optional will probably do it later if time permits
+This one is optional, will probably do it later if time permits
 
 # Quick recap / snippets
 ## Creating

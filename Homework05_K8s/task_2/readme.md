@@ -1,6 +1,6 @@
 # General info
 The first part in this readme contains some test and exploratory / curiosity commands.  
-The `Homework` itself is the last section, here is the link right to it: [the Homework ](#Homework)
+The `Homework` itself is the last section, here is the link right to it: [the Homework ](#homework)
 
 # Class drills
 ## Creating secret, cm and a pod
