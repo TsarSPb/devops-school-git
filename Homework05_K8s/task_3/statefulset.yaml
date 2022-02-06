@@ -30,7 +30,7 @@ spec:
       name: minio
     spec:
       accessModes: [ "ReadWriteOnce" ]
-      storageClassName: ""
+##      storageClassName: ""
       resources:
         requests:
           storage: 1Gi

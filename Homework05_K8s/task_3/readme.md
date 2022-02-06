@@ -134,8 +134,15 @@ k describe pod/minio-state-0
 >   Warning  FailedScheduling  41s (x10 over 9m58s)  default-scheduler  0/1 nodes are available: 1 pod has unbound immediate PersistentVolumeClaims.
 ```
 
-Apparently, after adding `storageClassName: ""` to the manifest, and manually adding a new `PersistentVolume` (pv-ss.yaml) the issue was resolved.  
-Not sure if it's my local issue or syntax change in newer K8s versions.  
+~~Apparently, after adding `storageClassName: ""` to the manifest, and manually adding a new `PersistentVolume` (pv-ss.yaml) the issue was resolved.  
+Not sure if it's my local issue or syntax change in newer K8s versions.~~
+Shouldn't do it. Setting `storageClassName: ""` disables dynamic provisioning for the PVC.  
+
+> You already have a PersistentVolume along with the corresponding storage medium provisioned  
+> and want to use that (without referring to a custom Storage Class or the default one)  
+> In this case, just set storageClass to an empty string ("") in the PersistentVolumeClaim.  
+> This will suppress dynamic provisioning!  
+
 ```
   volumeClaimTemplates:
   - metadata:
@@ -145,7 +152,8 @@ Not sure if it's my local issue or syntax change in newer K8s versions.
       storageClassName: ""
 ```
 Generally, if the default `StorageClass` is defined in the cluster, the `storageClassName` is not required.  
-There is one in `minikube`, but it still doesn't work
+~~There is one in `minikube`, but it still doesn't work~~  
+Apparrently, it works. Not sure what was wrong dureing the initial attempts.  
 ```
 k get storageclass
 > NAME                 PROVISIONER                RECLAIMPOLICY   VOLUMEBINDINGMODE   ALLOWVOLUMEEXPANSION   AGE
@@ -161,8 +169,35 @@ k get pv,pvc
 > persistentvolumeclaim/minio-minio-state-0      Bound    minio-state           1Gi        RWO                           3m40s
 ```
 
+### The correct way, after the issue is resolved
+```
+$ kubectl get storageclass,pv,pvc
+> NAME                                             PROVISIONER                RECLAIMPOLICY   VOLUMEBINDINGMODE   ALLOWVOLUMEEXPANSION   AGE
+> storageclass.storage.k8s.io/standard (default)   k8s.io/minikube-hostpath   Delete          Immediate           false                  45h
+
+$ k apply -f ./statefulset.yaml
+> statefulset.apps/minio-state configured
+> service/minio-state unchanged
+
+$ kubectl get pv,pvc,po
+> NAME                                                        CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM                         STORAGECLASS   REASON   AGE
+> persistentvolume/pvc-041b7dca-f7a9-40db-addf-6bbc5ad13cbe   1Gi        RWO            Delete           Bound    default/minio-minio-state-1   standard 15s
+> persistentvolume/pvc-30a44b5c-3da7-4e87-8c9b-59d0df33ef7b   1Gi        RWO            Delete           Bound    default/minio-minio-state-0   standard 2m10s
+> persistentvolume/pvc-627d7e85-284c-4396-b335-2b62982a7848   1Gi        RWO            Delete           Bound    default/minio-minio-state-2   standard 2s
+> 
+> NAME                                        STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   AGE
+> persistentvolumeclaim/minio-minio-state-0   Bound    pvc-30a44b5c-3da7-4e87-8c9b-59d0df33ef7b   1Gi        RWO            standard       2m10s
+> persistentvolumeclaim/minio-minio-state-1   Bound    pvc-041b7dca-f7a9-40db-addf-6bbc5ad13cbe   1Gi        RWO            standard       15s
+> persistentvolumeclaim/minio-minio-state-2   Bound    pvc-627d7e85-284c-4396-b335-2b62982a7848   1Gi        RWO            standard       2s
+> 
+> NAME                READY   STATUS              RESTARTS   AGE
+> pod/minio-state-0   1/1     Running             0          2m10s
+> pod/minio-state-1   1/1     Running             0          15s
+> pod/minio-state-2   0/1     ContainerCreating   0          2s
+```
+
 ## Moving on
-After applying the `statefilset.yaml` the `minio-minio-state-0` PVC is still pending, but now this is because there is just no available PV to bind to.
+After applying the `statefulset.yaml` the `minio-minio-state-0` PVC is still pending, but now this is because there is just no available PV to bind to.
 ```
 k apply -f statefulset.yaml
 > statefulset.apps/minio-state created
@@ -393,10 +428,11 @@ k apply -f pvc.yaml
 k apply -f deployment.yaml
 k apply -f minio-nodeport.yaml
 k apply -f ingress.yaml
-k apply -f pv-ss.yaml
+# k apply -f pv-ss.yaml # don't need it if dynamic provisioning works as expected
 k apply -f statefulset.yaml
 k get deploy,po,svc,ing,pv,pvc
 
+k create ns prod-web
 k apply -n prod-web -f old_app/.
 k get -n prod-web deploy,po,svc,ing
 
@@ -413,7 +449,7 @@ k delete -f minio-nodeport.yaml
 k delete -f ingress.yaml
 k delete -f statefulset.yaml
 k delete pvc minio-minio-state-0
-k delete -f pv-ss.yaml
+# k delete -f pv-ss.yaml # don't need it if dynamic provisioning works as expected
 k delete -f pvc.yaml
 k delete -f pv.yaml
 ```
