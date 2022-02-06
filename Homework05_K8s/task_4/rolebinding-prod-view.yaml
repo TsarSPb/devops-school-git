@@ -1,0 +1,15 @@
+apiVersion: rbac.authorization.k8s.io/v1
+# kind: RoleBinding
+kind: RoleBinding
+metadata:
+  name: prod_view_user
+  namespace: prod
+  # the default namespace (applicable to RoleBinding) is default
+subjects:
+- kind: User
+  name: prod_view_user
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: ClusterRole
+  name: view
+  apiGroup: rbac.authorization.k8s.io
