@@ -3,8 +3,8 @@ The first part in this readme contains some test and exploratory / curiosity com
 The `Homework` itself down below, after the `Class drills` section, here is the link right to it: [the Homework ](#homework)
 
 # Reference doc
-https://kubernetes.io/docs/reference/access-authn-authz/service-accounts-admin/
-https://kubernetes.io/docs/reference/access-authn-authz/authorization/
+https://kubernetes.io/docs/reference/access-authn-authz/service-accounts-admin/  
+https://kubernetes.io/docs/reference/access-authn-authz/authorization/  
 
 # Class drills
 ## Check what I can do
@@ -248,6 +248,8 @@ $ kubectl api-resources --sort-by name -o wide | grep -E 'deploy|pod'
 
 
 ## Deploy users
+[Back to the TOC](#homework)
+
 * Create users deploy_view and deploy_edit. Give the user deploy_view rights only to view deployments, pods. Give the user deploy_edit full rights to the objects deployments, pods.
 
 > My understanding of the task: both users should be able to manupilate  
@@ -365,6 +367,8 @@ deployment.apps/web edited
 ```
 
 ## Namespace resources
+[Back to the TOC](#homework)
+
 * Create namespace prod. Create users prod_admin, prod_view. Give the user prod_admin admin rights on ns prod, give the user prod_view only view rights on namespace prod.
 
 ### Creatig certificates and roles
@@ -463,4 +467,87 @@ pod "web-78bf47f5f-rj7d8" deleted
 ```
 
 ## serviceAccount
+[Back to the TOC](#homework)
 
+* Create a serviceAccount sa-namespace-admin. Grant full rights to namespace default. Create context, authorize using the created sa, check accesses.
+
+### Creating the sa account
+```
+k create sa sa-namespace-admin
+> serviceaccount/sa-namespace-admin created
+$ k get sa sa-namespace-admin -o yaml
+> apiVersion: v1
+> kind: ServiceAccount
+> metadata:
+>   creationTimestamp: "2022-02-07T06:19:24Z"
+>   name: sa-namespace-admin
+>   namespace: default
+>   resourceVersion: "15860"
+>   uid: 6db3274c-99d3-4f43-94d8-86fbd7baaa95
+> secrets:
+> - name: sa-namespace-admin-token-phvtp
+```
+
+### Binding the role
+```
+k apply -f ./binding-sa-namespace-admin.yaml
+> rolebinding.rbac.authorization.k8s.io/sa-namespace-admin created
+k config set-context sa-namespace-admin --cluster=kubernetes --user=sa-namespace-admin
+> Context "sa-namespace-admin" created
+k get clusterrole admin -o yaml
+$ k get rolebinding,clusterrolebinding | grep sa-name
+> rolebinding.rbac.authorization.k8s.io/sa-namespace-admin   ClusterRole/admin   6m50s
+$ k describe sa sa-namespace-admin
+> Name:                sa-namespace-admin
+> Namespace:           default
+> Labels:              <none>
+> Annotations:         <none>
+> Image pull secrets:  <none>
+> Mountable secrets:   sa-namespace-admin-token-phvtp
+> Tokens:              sa-namespace-admin-token-phvtp
+> Events:              <none>
+```
+
+### Setting the context and credentials
+```
+kubectl config set-context sa-namespace-admin --cluster=minikube --user=sa-namespace-admin
+> Context "sa-namespace-admin" created.
+
+SERVICE_ACCOUNT_NAME=sa-namespace-admin
+CONTEXT=minikube
+NAMESPACE=default
+NEW_CONTEXT=sa-namespace-admin
+SECRET_NAME=$(kubectl get serviceaccount ${SERVICE_ACCOUNT_NAME} \
+  --context ${CONTEXT} --namespace ${NAMESPACE} -o jsonpath='{.secrets[0].name}')
+TOKEN_DATA=$(kubectl get secret ${SECRET_NAME} \
+  --context ${CONTEXT} --namespace ${NAMESPACE} -o jsonpath='{.data.token}')
+TOKEN=$(echo ${TOKEN_DATA} | base64 -d)
+$ kubectl config set-credentials sa-namespace-admin --token=$TOKEN
+> User "sa-namespace-admin" set.
+```
+
+### Testing RBAC
+```
+$ kubectl config current-context
+> minikube
+
+$ kubectl auth can-i get pods --as=system:serviceaccount:default:sa-namespace-admin
+> yes
+
+$ kubectl auth can-i get pods --as=system:serviceaccount:default:sa-namespace-admin -n test-ns
+> no
+
+$ k config use-context sa-namespace-admin
+> Switched to context "sa-namespace-admin".
+
+$ k get po
+> NAME                  READY   STATUS    RESTARTS   AGE
+> web-78bf47f5f-24njr   1/1     Running   0          16h
+> web-78bf47f5f-v2rkz   1/1     Running   0          15h
+
+$ k delete po web-78bf47f5f-v2rkz
+> pod "web-78bf47f5f-v2rkz" deleted
+
+$ k -n test-ns get po
+> Error from server (Forbidden): pods is forbidden: User "system:serviceaccount:default:sa-namespace-admin" cannot list resource "pods" in API group "" in the namespace "test-ns"
+```
