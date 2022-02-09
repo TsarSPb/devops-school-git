@@ -1,9 +1,13 @@
 # General info and notes
 Set the region and resource group name in the `variables.tf`, set admin_user and admin_pass in `terraform.tfvars` and run `terraform apply`
 
-Used the `null_resource` kind of resource and trigger inside it to make it run every time - this helps to debug provisioners.  
+Used the `null_resource` kind of resource to trigger inside it to make it run every time - this helps to debug provisioners.  
 
 The files even for such a small project are a reall mess. Should invest some time to find out approaches to do it in a more neat and structured way, e.g. using modules and imports.
+
+[Homework 1](#homework-1)
+[Homework 2](#homework-2)
+
 
 # Homework 1
 * Скачать последнюю версию terraform
@@ -12,15 +16,17 @@ The files even for such a small project are a reall mess. Should invest some tim
 
 [Assignment 1 Download terraform](#download-terraform)  
 [Assignment 2 Data source](#data-source)  
-[Assignment 3 serviceAccount](#output)  
+[Assignment 3 Using output](#using-output)  
 
 ## Download teraform
 [Back to the top](#homework-1)
 * Скачать последнюю версию terraform
 ```
-tf -version
-Terraform v1.1.5
-on linux_amd64
+tsar@DESKTOP-80THIFC:Homework08_Tf$ tf -version
+> Terraform v1.1.5
+> on linux_amd64
+> + provider registry.terraform.io/hashicorp/azurerm v2.95.0
+> + provider registry.terraform.io/hashicorp/null v3.1.0
 ```
 
 ## Data source
@@ -52,7 +58,7 @@ data "azurerm_resources" "data-sgs" {
 }
 ```
 
-## Output
+## Using utput
 [Back to the top](#homework-1)
 * Вывести в оутпут имена AWS VPC/Azure virtual network, subnets и security groups
 
